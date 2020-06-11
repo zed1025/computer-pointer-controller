@@ -6,6 +6,7 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 - Directory Structure
 
 ![Directory Structure](./bin/dir_struct.png)
+
 	- **NOTE** if you dont see the `models` directory then create it
 	- `bin` contains the imput video file, plus other images/media
 	- `model` is where you will download the model using the model downloader tool
