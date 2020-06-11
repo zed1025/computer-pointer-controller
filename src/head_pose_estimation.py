@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import os
+import time
 from openvino.inference_engine import IECore, IENetwork
 
 
@@ -32,7 +33,7 @@ class HeadPoseEstimationModel:
         self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device, num_requests=1)
         end_time = time.time()
 
-        print('FaceDetectionModel Load Time: {}'.format(end_time-start_time))
+        print('HeadPoseEstimationModel Load Time: {}'.format(end_time-start_time))
 
         # extracting useful information from the network for later use
         self.input_name = next(iter(self.network.inputs))

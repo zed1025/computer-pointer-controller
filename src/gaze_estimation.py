@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import os, math
+import time
 from openvino.inference_engine import IECore, IENetwork
 
 

@@ -2,7 +2,9 @@
 import cv2
 import numpy as np
 import os
+import time
 from openvino.inference_engine import IECore, IENetwork
+
 
 
 class FacialLandmarksDetectionModel:
