@@ -26,8 +26,13 @@ class HeadPoseEstimationModel:
         self.plugin = IECore()
         # creating a IENetowrk with the model structuer and model weights
         self.network = self.plugin.read_network(model=self.model_structure, weights=self.model_weights)
+
+        start_time = time.time()
         # creating an executable network(IE) for inference
         self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device, num_requests=1)
+        end_time = time.time()
+
+        print('FaceDetectionModel Load Time: {}'.format(end_time-start_time))
 
         # extracting useful information from the network for later use
         self.input_name = next(iter(self.network.inputs))

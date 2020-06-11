@@ -35,8 +35,12 @@ class FacialLandmarksDetectionModel:
         self.output_names = next(iter(self.network.outputs))
         self.output_shape = self.network.outputs[self.output_names].shape
 
+        start_time = time.time()
         # creating an executable network(IE) for inference
         self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device, num_requests=1)
+        end_time = time.time()
+
+        print('FacialLandmarksDetectionModel Load Time: {}'.format(end_time-start_time))
         self.check_model()
 
     def check_model(self):

@@ -12,6 +12,16 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 	- `bin` contains the imput video file, plus other images/media
 	- `model` is where you will download the model using the model downloader tool
 	- `src` contains all the python files required for the project
+- Virtualenvironment setup
+	- This step is optional
+	- install virtualenvironment
+		`pip3 install virtualenv`
+	- create a new virtualenvironment
+		`python3 -m virtualenv venv`, here `venv` is the name of the virtualenvironment
+	- activate the virtualenv
+		`source venv/bin/activate`
+	- install the dependencies, by first going into the directory containing requirements.txt and then
+		`python -m pip install -r requirements.txt`
 - Installation requirements
 	- Intel Distribution of Open VINO Toolkit, v2020.2
 		- Follow [this](https://docs.openvinotoolkit.org/2020.2/_docs_install_guides_installing_openvino_linux.html) guide for successful installtion
