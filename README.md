@@ -5,6 +5,11 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 ![Pipeline](./bin/pipeline.png)
 
 ## Project Set Up and Installation
+- Project Tested on
+	- Ubuntu 18.04
+	- Open Vino 2020.2
+	- Python 3.6
+
 - Directory Structure
 
 ![Directory Structure](./bin/dir_struct.png)
