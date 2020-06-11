@@ -69,8 +69,14 @@ class FaceDetectionModel:
     def predict(self, image, prob_threshold):
         # preprocess the input image(frame in case of video/camera feed)
         processed_image=self.preprocess_input(image.copy())
+
+        infer_start_time = time.time()
         # make inference
         outputs = self.exec_net.infer({self.input_name:processed_image})
+        infer_end_time = time.time()
+
+        print('FaceDetectionModel Inference Time: {}'.format(infer_end_time-infer_start_time))
+
         # getting the coordinates for the cropped face
         coords = self.preprocess_output(outputs, prob_threshold)
 

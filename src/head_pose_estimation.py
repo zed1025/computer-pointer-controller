@@ -64,8 +64,14 @@ class HeadPoseEstimationModel:
     def predict(self, image):
         # preprocess the input image(frame in case of video/camera feed)
         img_processed = self.preprocess_input(image.copy())
+
+        infer_start_time = time.time()
         # make inference
         outputs = self.exec_net.infer({self.input_name:img_processed})
+        infer_end_time = time.time()
+
+        print('HeadPoseEstimationModel Inference Time: {}'.format(infer_end_time-infer_start_time))
+
         # preprocessing the outputs - i.e. the result we get after inference
         finalOutput = self.preprocess_output(outputs)
         return finalOutput

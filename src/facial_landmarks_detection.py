@@ -67,8 +67,14 @@ class FacialLandmarksDetectionModel:
     def predict(self, image):
         # preprocess the input image(frame in case of video/camera feed)
         preprocess_image = self.preprocess_input(image.copy())
+
+        infer_start_time = time.time()
         # make inference
         outputs = self.exec_net.infer({self.input_name:preprocess_image})
+        infer_end_time = time.time()
+
+        print('FacialLandmarksDetectionModel Inference Time: {}'.format(infer_end_time-infer_start_time))
+
         # getting the coordinates for the output
         # here the output contains among other things the location(coordinates) of the left and the right eye
         coords = self.preprocess_output(outputs)

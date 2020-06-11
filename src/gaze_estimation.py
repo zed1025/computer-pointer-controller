@@ -65,8 +65,14 @@ class GazeEstimationModel:
     def predict(self, left_eye_image, right_eye_image, hpa):
         # preprocessing the left eye, and the right eye image
         le_img_processed, re_img_processed = self.preprocess_input(left_eye_image.copy(), right_eye_image.copy())
+        
+        infer_start_time = time.time()
         # feeding the outputs from headposeestimation, and facedetection to the model for inference
         outputs = self.exec_net.infer({'head_pose_angles':hpa, 'left_eye_image':le_img_processed, 'right_eye_image':re_img_processed})
+        infer_end_time = time.time()
+
+        print('GazeEstimationModel Inference Time: {}'.format(infer_end_time-infer_start_time))
+
         # preprocessing the outputs from the model, and getting the location for mouse pointer
         new_mouse_coord, gaze_vector = self.preprocess_output(outputs,hpa)
 
