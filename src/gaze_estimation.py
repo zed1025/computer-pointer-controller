@@ -35,6 +35,26 @@ class GazeEstimationModel:
         self.input_shape = self.network.inputs[self.input_name[1]].shape
         self.output_names = [i for i in self.network.outputs.keys()]
 
+        self.check_model()
+
+    def check_model(self):
+        # check if all the layers of the model are supported
+        supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
+        unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+
+        # if all layers of the model are not supported then try to use cpu extension if provided in the command line argument, else exit
+        if len(unsupported_layers)!=0 and self.device=='CPU':
+            print("unsupported layers found:{}".format(unsupported_layers))
+            if not self.extensions==None:
+                print("Adding cpu_extension")
+                self.plugin.add_extension(self.extensions, self.device)
+                supported_layers = self.plugin.query_network(network = self.network, device_name=self.device)
+                unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+                if len(unsupported_layers)!=0:
+                    print("Error could not be resolved even after adding cpu_extension")
+                    exit(1)
+            else:
+                exit(1)
 
     def predict(self, left_eye_image, right_eye_image, hpa):
         # preprocessing the left eye, and the right eye image

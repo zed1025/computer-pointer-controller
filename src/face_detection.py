@@ -24,19 +24,42 @@ class FaceDetectionModel:
         self.model_weights = self.model_name.split('.')[0]+'.bin'
 
     def load_model(self):   
+        # initializing IECore object
+        self.plugin=IECore() 
         # initializing the network with structure(.xml) and weights(.bin) files
-        self.model=IENetwork(self.model_structure, self.model_weights)    
+        self.network = self.plugin.read_network(model=self.model_structure, weights=self.model_weights)
 
         # extracting useful information from the network for later use
-        self.input_name=next(iter(self.model.inputs))
-        self.input_shape=self.model.inputs[self.input_name].shape
-        self.output_name=next(iter(self.model.outputs))
-        self.output_shape=self.model.outputs[self.output_name].shape
+        self.input_name = next(iter(self.network.inputs))
+        self.input_shape = self.network.inputs[self.input_name].shape
+        self.output_names = next(iter(self.network.outputs))
+        self.output_shape = self.network.outputs[self.output_names].shape
 
-        # initializing IECore object
-        self.plugin=IECore()   
+          
         # creating an executable network, or the IE    
-        self.exec_net=self.plugin.load_network(network=self.model,device_name=self.device,num_requests=1)
+        self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device, num_requests=1)
+        
+        self.check_model()
+
+    def check_model(self):
+        # check if all the layers of the model are supported
+        supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
+        unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+
+        # if all layers of the model are not supported then try to use cpu extension if provided in the command line argument, else exit
+        if len(unsupported_layers)!=0 and self.device=='CPU':
+            print("unsupported layers found:{}".format(unsupported_layers))
+            if not self.extensions==None:
+                print("Adding cpu_extension")
+                self.plugin.add_extension(self.extensions, self.device)
+                supported_layers = self.plugin.query_network(network = self.network, device_name=self.device)
+                unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+                if len(unsupported_layers)!=0:
+                    print("Error could not be resolved even after adding cpu_extension")
+                    exit(1)
+            else:
+                exit(1)
+
 
     def predict(self, image, prob_threshold):
         # preprocess the input image(frame in case of video/camera feed)
@@ -72,7 +95,7 @@ class FaceDetectionModel:
         points =[]
         # generating the coordinates for the cropped face, keeping in mind the probability threshold.
 
-        outs = outputs[self.output_name][0][0]
+        outs = outputs[self.output_names][0][0]
         for out in outs:
             conf = out[2]
             # if confidence of the model is lower than the specified(or default) probability threshold, then do nothing

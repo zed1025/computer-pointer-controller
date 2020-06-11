@@ -36,7 +36,27 @@ class FacialLandmarksDetectionModel:
         self.output_shape = self.network.outputs[self.output_names].shape
 
         # creating an executable network(IE) for inference
-        self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device,num_requests=1)
+        self.exec_net = self.plugin.load_network(network=self.network, device_name=self.device, num_requests=1)
+        self.check_model()
+
+    def check_model(self):
+        # check if all the layers of the model are supported
+        supported_layers = self.plugin.query_network(network=self.network, device_name=self.device)
+        unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+
+        # if all layers of the model are not supported then try to use cpu extension if provided in the command line argument, else exit
+        if len(unsupported_layers)!=0 and self.device=='CPU':
+            print("unsupported layers found:{}".format(unsupported_layers))
+            if not self.extensions==None:
+                print("Adding cpu_extension")
+                self.plugin.add_extension(self.extensions, self.device)
+                supported_layers = self.plugin.query_network(network = self.network, device_name=self.device)
+                unsupported_layers = [l for l in self.network.layers.keys() if l not in supported_layers]
+                if len(unsupported_layers)!=0:
+                    print("Error could not be resolved even after adding cpu_extension")
+                    exit(1)
+            else:
+                exit(1)
 
     def predict(self, image):
         # preprocess the input image(frame in case of video/camera feed)
