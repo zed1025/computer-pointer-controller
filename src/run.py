@@ -34,7 +34,7 @@ def build_argparser():
     parser.add_argument("-l", "--cpu_extension", required=False, type=str,
                         default=None,
                         help="path to cpu_extension file. Not needed in v2020.x")
-    parser.add_argument("-prob", "--prob_threshold", required=False, type=float,
+    parser.add_argument("-p", "--prob_threshold", required=False, type=float,
                         default=0.6,
                         help="probability threshold to compare against model confidence")
     parser.add_argument("-d", "--device", type=str, default="CPU",
@@ -46,8 +46,10 @@ def main():
     args = build_argparser().parse_args()
     
     logger = logging.getLogger()
+    # video file
     inputFilePath = args.input
     inputFeeder = None
+    # check to see if the user wants to use a video or camera feed
     if inputFilePath.lower()=="cam":
         inputFeeder = InputFeeder("cam")
     else:
@@ -56,14 +58,17 @@ def main():
             exit(1)
         inputFeeder = InputFeeder("video",inputFilePath)
     
+    # get model files from the command line
     modelPathDict = {'FaceDetectionModel':args.facedetectionmodel, 'FacialLandmarksDetectionModel':args.faciallandmarkmodel, 
     'GazeEstimationModel':args.gazeestimationmodel, 'HeadPoseEstimationModel':args.headposemodel}
     
+    # check if all files are accessible and correct
     for fileNameKey in modelPathDict.keys():
         if not os.path.isfile(modelPathDict[fileNameKey]):
             logger.error("Unable to find specified "+fileNameKey+" xml file")
             exit(1)
-            
+    
+    # initializing the 4 models
     fdm = FaceDetectionModel(modelPathDict['FaceDetectionModel'], args.device, args.cpu_extension)
     fldm = FacialLandmarksDetectionModel(modelPathDict['FacialLandmarksDetectionModel'], args.device, args.cpu_extension)
     gem = GazeEstimationModel(modelPathDict['GazeEstimationModel'], args.device, args.cpu_extension)
@@ -71,12 +76,14 @@ def main():
     
     mc = MouseController('medium','fast')
     
+    # loading models
     inputFeeder.load_data()
     fdm.load_model()
     fldm.load_model()
     hpem.load_model()
     gem.load_model()
     
+    # starting frame by frame inference
     frame_count = 0
     for ret, frame in inputFeeder.next_batch():
         if not ret:
@@ -86,6 +93,7 @@ def main():
             cv2.imshow('video',cv2.resize(frame,(500,500)))
     
         key = cv2.waitKey(60)
+        # getting the cropped face from the Face Detecction model
         croppedFace, face_coords = fdm.predict(frame.copy(), args.prob_threshold)
         if type(croppedFace)==int:
             logger.error("Unable to detect the face.")
@@ -93,12 +101,16 @@ def main():
                 break
             continue
         
+        # getting the head post estimation output
         hp_out = hpem.predict(croppedFace.copy())
         
+        # getting the coordinated for the facial landmarks using the cropped image from the FacialRecognition model as input
         left_eye, right_eye, eye_coords = fldm.predict(croppedFace.copy())
         
+        # getting the mouse coordinated by feeding the outputs from landmark and head-pose as inputs to the gaze detection
         new_mouse_coord, gaze_vector = gem.predict(left_eye, right_eye, hp_out)
         
+        # moving the mouse to the new position
         if frame_count%5==0:
             mc.move(new_mouse_coord[0],new_mouse_coord[1])    
         if key==27:

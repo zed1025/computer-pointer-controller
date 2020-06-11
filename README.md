@@ -62,12 +62,47 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 		- `python3 run.py -f /home/amit/dev/ov_workspace/starter1/models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001.xml -fl /home/amit/dev/ov_workspace/starter1/models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009.xml -hp /home/amit/dev/ov_workspace/starter1/models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.xml -ge /home/amit/dev/ov_workspace/starter1/models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002.xml -i /home/amit/dev/ov_workspace/starter1/bin/demo.mp4 -d GPU`
 
 ## Documentation
-*TODO:* Include any documentation that users might need to better understand your project code. For instance, this is a good place to explain the command line arguments that your project supports.
+- **Understanding the various models, their input and outputs**
+	- Face Detection Model
+		- Uses pruned Mobilenet with depthwise convolutions
+		- Input Shape: [1x3x385x672], [BxCxHxW]
+		- Color space: BGR
+		- Output Shape: [1x1xNx7], where N is the number of detected bounding box. Each detection contains the following
+			- [image_id, label, conf, x_min, y_min, x_max, y_max]
+	- Head Pose Estimataion
+		- Uses a custom CNN architecture
+		- Input Shape: [1x3x60x60], [1xCxHxW]
+		- Color Space: BGR
+		- Output: The output layer has 3 units, each represention one of the angles in Tait-Bryan Angles(yaw, pitch & roll)
+			- yaw: angle_y_fc
+			- pitch: angle_p_fc
+			- roll: angle_r_fc
+			- all the angles have shape [1, 1] and contains one FP value in degrees
+	- Landmark Regression
+		- Classic CNN design
+		- Input Shape: [1, 3, 48, 48], [B. C. H. W]
+		- Color Space: BGR
+		- Outputs: Row vector of shape [1, 10] containing coordinates of the landmark of 2 eyes, 1 nose and 2 mouth
+	- Gaze Detection
+		- 3 Inputs
+			- square crop of left eye image, [1,3, 60, 60]
+			- square crop of right eye image, [1,3, 60, 60], both from Face detection and Landmark regression
+			- 3 head pose angles: (yaw, pitch, roll), [1, 3], from Head Pose Estimation model
+		- Output: [1, 3] shape blob, containing coordinates of the gaze detection vectors
+
+- **Understanding the command line arguments**
+	- The app supports the following command line arguments
+		- `-f`: specified the path of the face-detection model's .xml file
+		- `-fl`: specified the path of the facial-landmark-detection model's .xml file
+		- `-hp`: specified the path of the head-posr-estimation model's .xml file
+		- `-ge`: specified the path of the gaze-estimation model's .xml file
+		- `-i`: specifies the path to the input video file. If you are using the webcam for live feed, then set the value of this flag to _cam_
+		- `-p`: specify the probability threshold for face detection model
+		- `-d`: specify the target device, i.e. the device the models will run inference on, possible values CPU, GPU, VPU, MYRIAD etc.
 
 ## Benchmarks
-*TODO:* Include the benchmark results of running your model on multiple hardwares and multiple model precisions. Your benchmarks can include: model loading time, input/output processing time, model inference time etc.
 
-**I could only run the benchmarks on CPU**
+**Benchmarks for CPU only**
 
 - **Model Load Time FP32**
 	- NOTE
@@ -113,4 +148,6 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 ![Inference Time Comparison](./bin/inf_time_comp.png)
 
 ### Edge Cases
-There will be certain situations that will break your inference flow. For instance, lighting changes or multiple people in the frame. Explain some of the edge cases you encountered in your project and how you solved them to make your project more robust.
+
+- If the position of the landmarks is not visible in the frame, the landmark detection model will not detect  anthing and the app will exit
+- For multiple faces, the facedetection model selects the one which was identified first
