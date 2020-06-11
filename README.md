@@ -67,9 +67,12 @@ This project, uses a gaze detection model to control the mouse pointer of your c
 **I could only run the benchmarks on CPU**
 
 - Model Load times
+
+
 | | face-detection-adas-binary-0001 | head-pose-estimation-adas-0001 | landmarks-regression-retail-0009 | gaze-estimation-adas-0002 |
 |--------------------|--------------------|--------------------|--------------------|--------------------|
 | Time | 0.22124147415161133 | 0.10043168067932129 | 0.10894560813903809 | 0.13179564476013184 |
+
 
 ## Results
 *TODO:* Discuss the benchmark results and explain why you are getting the results you are getting. For instance, explain why there is difference in inference time for FP32, FP16 and INT8 models.
